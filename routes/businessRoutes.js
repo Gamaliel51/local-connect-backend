@@ -90,7 +90,7 @@ router.post("/login", async (req, res) => {
 // Update Business Profile
 router.put("/update-profile", verifyBusinessToken, upload.single("profileImage"), async (req, res) => {
   try {
-      const { name, about, address, category, tags } = req.body;
+      const { name, about, address, category, tags, location } = req.body;
       let profileImageUrl;
       
       const business = await Business.findOne({ where: { email: req.business.businessId } });
@@ -116,7 +116,7 @@ router.put("/update-profile", verifyBusinessToken, upload.single("profileImage")
       }
 
       await Business.update(
-          { name, about, address, category, tags: JSON.parse(tags), profileImageUrl },
+          { name, about, address, category, tags: JSON.parse(tags), profileImageUrl, location: JSON.parse(location) },
           { where: { email: req.business.businessId } }
       );
 
