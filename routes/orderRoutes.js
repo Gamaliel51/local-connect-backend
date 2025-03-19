@@ -39,22 +39,42 @@ router.put("/:id", verifyBusinessToken, async (req, res) => {
 // Create Order
 router.post("/create", verifyUserToken, async (req, res) => {
     try {
-        const { business_owned, product_list, collection_method, customer_notes } = req.body;
-        
+      const { customer, productOrders, collection_method, customer_notes } = req.body;
+      if (!customer || !productOrders || !Array.isArray(productOrders)) {
+        return res.status(400).json({ error: "Invalid request data." });
+      }
+  
+      // Group product IDs by business_owned
+      const groupedProducts = {};
+      productOrders.forEach((order) => {
+        const biz = order.business_owned;
+        if (!groupedProducts[biz]) {
+          groupedProducts[biz] = [];
+        }
+        groupedProducts[biz].push(order.product_id);
+      });
+  
+      // Create a separate order for each business
+      const createdOrders = [];
+      for (const biz in groupedProducts) {
         const order = await Order.create({
-            business_owned,
-            customer: req.user.userId,
-            product_list,
-            collection_method,
-            customer_notes,
-            status: ["initiated"],
+          // order_id remains blank (or you could assign a generated value if needed)
+          order_id: "", 
+          business_owned: biz,
+          customer,
+          product_list: groupedProducts[biz],
+          collection_method,
+          customer_notes,
+          status: ["unpaid"],
         });
-
-        res.status(201).json({ message: "Order placed successfully", order });
+        createdOrders.push(order);
+      }
+  
+      res.status(201).json({ message: "Orders created successfully", orders: createdOrders });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-});
+  });
 
 // Route to fetch all orders that belong to a user
 router.get("/user/:email", async (req, res) => {

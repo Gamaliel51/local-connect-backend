@@ -5,8 +5,6 @@ const sequelize = require('../config/connectDB')
 const Order = sequelize.define('Order', {
     order_id: {
         type: DataTypes.STRING,
-        primaryKey: true,
-        unique: true,
     },
     business_owned: {
         type: DataTypes.STRING, // business email
@@ -31,7 +29,7 @@ const Order = sequelize.define('Order', {
     },
     status: {
         type: DataTypes.ARRAY(STRING), // from received to inprogress or whatever the business decides until complete
-        defaultValue: ['initiated']
+        defaultValue: ['unpaid']
     },
     // available: {
     //     type: DataTypes.BOOLEAN,
