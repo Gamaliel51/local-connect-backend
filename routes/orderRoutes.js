@@ -37,7 +37,7 @@ router.put("/:id", verifyBusinessToken, async (req, res) => {
 });
   
 // Create Order
-router.post("/create", verifyUserToken, async (req, res) => {
+router.post("/create", verifyBusinessToken, async (req, res) => {
     try {
       const { customer, productOrders, collection_method, customer_notes } = req.body;
       if (!customer || !productOrders || !Array.isArray(productOrders)) {
