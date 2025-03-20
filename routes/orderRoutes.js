@@ -74,7 +74,7 @@ router.post("/create", verifyBusinessToken, async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  });
+});
 
 // Route to fetch all orders that belong to a user
 router.get("/user/:email", async (req, res) => {
