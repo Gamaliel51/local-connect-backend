@@ -32,7 +32,8 @@ router.post("/flutterwave-webhook", async (req, res) => {
     if (payload.status === "successful") {
       // For example, get the customer's email from the payload.
       // Adjust this according to how Flutterwave sends the customer info.
-      const customerEmail = payload.customer?.email;
+      const customerEmail = payload.customer.email;
+      const orderID = payload.customer.fullName.split(' ')[0]
 
       // Update orders for this customer from 'unpaid' to 'paid'
       if (customerEmail) {
