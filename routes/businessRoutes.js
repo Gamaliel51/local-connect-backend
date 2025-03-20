@@ -15,7 +15,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
+const flw = new Flutterwave(settings.flw_public_key, settings.flw_private_key);
 
 // Utility function to calculate distance using the Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {

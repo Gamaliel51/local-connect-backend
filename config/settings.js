@@ -17,6 +17,9 @@ const settings = {
     db_host: process.env.DATABASE_HOST,
     db_port: process.env.DATABASE_PORT,
     db_ssl: process.env.DATABASE_SSL,
+    flw_public_key: process.env.FLW_PUBLIC_KEY,
+    flw_private_key: process.env.FLW_PRIVATE_KEY,
+    
 
     sample_user: {
         email: "john.doe@example.com",
