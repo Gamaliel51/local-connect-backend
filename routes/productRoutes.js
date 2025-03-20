@@ -13,6 +13,16 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// Route to fetch all products
+router.get("/all", async (req, res) => {
+    try {
+      const products = await Product.findAll();
+      res.json({ products });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+});
+
 // Get products by business email
 router.get("/by-business/:business_email", async (req, res) => {
     try {
@@ -113,14 +123,5 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Route to fetch all products
-router.get("/all", async (req, res) => {
-    try {
-      const products = await Product.findAll();
-      res.json({ products });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-});
 
 module.exports = router;
