@@ -7,42 +7,65 @@ const Business = require('../models/Business')
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const { verifyBusinessToken, verifyUserToken } = require("../middleware/middleware");
+const Wallet = require("../models/Wallet");
 const router = express.Router();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const updateOrder = async (payload) => {
-  // Check if the transaction was successful
+const updateOrderAndWallet = async (payload) => {
   if (payload.status === "successful") {
-    // For example, get the customer's email from the payload.
-    // Adjust this according to how Flutterwave sends the customer info.
+    // Extract necessary details from the payload
     const customerEmail = payload.customer.email;
-    const orderID = payload.txRef
+    const orderID = payload.txRef;
+    const transAmount = Number(payload.amount);
 
-    console.log("SUCCCEESSS!!!: ", customerEmail, orderID)
+    console.log("Transaction Successful:", customerEmail, orderID);
 
-    // Update orders for this customer from 'unpaid' to 'paid'
-    if (customerEmail) {
+    // Find all orders for this customer with the given order ID
+    const orders = await Order.findAll({
+      where: { customer: customerEmail, order_id: orderID },
+    });
+    console.log("Orders to update:", orders);
+
+    // Process each order
+    for (const order of orders) {
+      // Get the business email from the order
+      const businessEmail = order.business_owned;
       
-      const orders = await Order.findAll({ where: { customer: customerEmail, order_id: orderID } });
+      // Update the order status to 'paid'
+      order.status = ["paid"];
+      await order.save();
 
-      console.log("ORDERS: ", orders)
+      if (businessEmail) {
+        // Find the wallet for the business
+        let wallet = await Wallet.findOne({ where: { business_email: businessEmail } });
+        if (!wallet) {
+          // Create a new wallet if one doesn't exist
+          wallet = await Wallet.create({
+            business_email: businessEmail,
+            amount: 0,
+            transactions: [],
+          });
+        }
 
-      for(const order of orders){
-        order.status = ['paid']
+        // Build the transaction record
+        const transaction = {
+          from: customerEmail,
+          to: businessEmail,
+          amount: transAmount,
+          orderID,
+          date: new Date(),
+        };
 
-        await order.save()
+        // Update the wallet
+        wallet.amount += transAmount;
+        wallet.transactions = [...(wallet.transactions || []), transaction];
+        await wallet.save();
       }
-
-      // Optionally, update the user's account (e.g. add credits)
-      // const user = await User.findOne({ where: { email: customerEmail } });
-      // if (user) {
-      //   // Update user's credits or perform other actions
-      // }
     }
   }
-}
+};
 
 // Fetch All Orders for a Business
 router.get("/fetch-orders", verifyBusinessToken, async (req, res) => {
@@ -60,10 +83,14 @@ router.post("/flutterwave-webhook", async (req, res) => {
     const payload = req.body;
     console.log("Flutterwave payload:", payload);
 
-    setTimeout(() => {updateOrder(payload); res.status(200).end();}, 30000)
-    
+    // Delay processing by 30 seconds (if needed) then update wallet and orders
+    setTimeout(() => {
+      updateOrderAndWallet(payload);
+      res.status(200).end();
+    }, 30000);
   } catch (error) {
     console.error("Flutterwave webhook error:", error);
+    res.status(500).end();
   }
 });
   
