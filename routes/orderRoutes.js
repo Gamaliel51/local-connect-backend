@@ -43,6 +43,8 @@ router.post("/create", verifyBusinessToken, async (req, res) => {
       if (!customer || !productOrders || !Array.isArray(productOrders)) {
         return res.status(400).json({ error: "Invalid request data." });
       }
+
+      const orderID = crypto.randomUUID()
   
       // Group product IDs by business_owned
       const groupedProducts = {};
@@ -59,7 +61,7 @@ router.post("/create", verifyBusinessToken, async (req, res) => {
       for (const biz in groupedProducts) {
         const order = await Order.create({
           // order_id remains blank (or you could assign a generated value if needed)
-          order_id: "", 
+          order_id: orderID, 
           business_owned: biz,
           customer,
           product_list: groupedProducts[biz],
