@@ -21,20 +21,40 @@ router.get("/fetch-orders", verifyBusinessToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-  
-// Update Order Status
-router.put("/:id", verifyBusinessToken, async (req, res) => {
-    try {
-        const { status } = req.body;
+
+// Flutterwave webhook route to receive transaction details
+router.post("/flutterwave-webhook", async (req, res) => {
+  try {
+    const payload = req.body;
+    console.log("Flutterwave payload:", payload);
+
+    // Check if the transaction was successful
+    if (payload.status === "successful") {
+      // For example, get the customer's email from the payload.
+      // Adjust this according to how Flutterwave sends the customer info.
+      const customerEmail = payload.customer?.email;
+
+      // Update orders for this customer from 'unpaid' to 'paid'
+      if (customerEmail) {
         await Order.update(
-            { status },
-            { where: { id: req.params.id, business_owned: req.business.businessId } }
+          { status: ["paid"] },
+          { where: { customer: customerEmail, status: ["unpaid"] } }
         );
-        res.json({ message: "Order status updated successfully" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+
+        // Optionally, update the user's account (e.g. add credits)
+        // const user = await User.findOne({ where: { email: customerEmail } });
+        // if (user) {
+        //   // Update user's credits or perform other actions
+        // }
+      }
     }
+  } catch (error) {
+    console.error("Flutterwave webhook error:", error);
+  } finally {
+    res.status(200).end();
+  }
 });
+  
   
 // Create Order
 router.post("/create", verifyBusinessToken, async (req, res) => {
@@ -87,6 +107,20 @@ router.get("/user/:email", async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+});
+
+// Update Order Status
+router.put("/:id", verifyBusinessToken, async (req, res) => {
+  try {
+      const { status } = req.body;
+      await Order.update(
+          { status },
+          { where: { id: req.params.id, business_owned: req.business.businessId } }
+      );
+      res.json({ message: "Order status updated successfully" });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 });
   
 
