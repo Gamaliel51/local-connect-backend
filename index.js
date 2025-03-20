@@ -16,7 +16,10 @@ const Order = require('./models/Order');
 const Product = require('./models/Product');
 const User = require('./models/User');
 const Cart = require('./models/Cart');
+const Wallet = require('./models/Wallet');
+
 const { createSampleRecords } = require('./middleware/middleware');
+
 
 
 

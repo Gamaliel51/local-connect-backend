@@ -10,6 +10,7 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const { verifyBusinessToken } = require("../middleware/middleware");
 const settings = require("../config/settings");
+const Wallet = require("../models/Wallet");
 const router = express.Router();
 
 const storage = multer.memoryStorage();
