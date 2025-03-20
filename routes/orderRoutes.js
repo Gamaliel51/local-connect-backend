@@ -12,6 +12,33 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+const updateOrder = async (payload) => {
+  // Check if the transaction was successful
+  if (payload.status === "successful") {
+    // For example, get the customer's email from the payload.
+    // Adjust this according to how Flutterwave sends the customer info.
+    const customerEmail = payload.customer.email;
+    const orderID = payload.txRef
+
+    console.log("SUCCCEESSS!!!: ", customerEmail, orderID)
+
+    // Update orders for this customer from 'unpaid' to 'paid'
+    if (customerEmail) {
+      
+      await Order.update(
+        { status: ["paid"] },
+        { where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } }
+      );
+
+      // Optionally, update the user's account (e.g. add credits)
+      // const user = await User.findOne({ where: { email: customerEmail } });
+      // if (user) {
+      //   // Update user's credits or perform other actions
+      // }
+    }
+  }
+}
+
 // Fetch All Orders for a Business
 router.get("/fetch-orders", verifyBusinessToken, async (req, res) => {
     try {
@@ -28,36 +55,8 @@ router.post("/flutterwave-webhook", async (req, res) => {
     const payload = req.body;
     console.log("Flutterwave payload:", payload);
 
-    // Check if the transaction was successful
-    if (payload.status === "successful") {
-      // For example, get the customer's email from the payload.
-      // Adjust this according to how Flutterwave sends the customer info.
-      const customerEmail = payload.customer.email;
-      const orderID = payload.txRef
-
-      console.log("SUCCCEESSS!!!: ", customerEmail, orderID)
-
-      // Update orders for this customer from 'unpaid' to 'paid'
-      if (customerEmail) {
-
-        const checkOrder = await Order.findOne({ where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] }})
-
-        if(!checkOrder){
-          return res.status(400).json({message: 'fail'})
-        }
-        
-        await Order.update(
-          { status: ["paid"] },
-          { where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } }
-        );
-
-        // Optionally, update the user's account (e.g. add credits)
-        // const user = await User.findOne({ where: { email: customerEmail } });
-        // if (user) {
-        //   // Update user's credits or perform other actions
-        // }
-      }
-    }
+    setTimeout(() => updateOrder(payload), 10000)
+    
   } catch (error) {
     console.error("Flutterwave webhook error:", error);
   } finally {
