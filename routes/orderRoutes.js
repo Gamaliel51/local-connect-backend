@@ -25,7 +25,7 @@ const updateOrder = async (payload) => {
     // Update orders for this customer from 'unpaid' to 'paid'
     if (customerEmail) {
       
-      const orders = await Order.findAll({ where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } });
+      const orders = await Order.findAll({ where: { customer: customerEmail, order_id: orderID } });
 
       console.log("ORDERS: ", orders)
 
@@ -71,12 +71,10 @@ router.post("/flutterwave-webhook", async (req, res) => {
 // Create Order
 router.post("/create", verifyBusinessToken, async (req, res) => {
     try {
-      const { customer, productOrders, collection_method, customer_notes } = req.body;
+      const { order_id, customer, productOrders, collection_method, customer_notes } = req.body;
       if (!customer || !productOrders || !Array.isArray(productOrders)) {
         return res.status(400).json({ error: "Invalid request data." });
       }
-
-      const orderID = crypto.randomUUID()
   
       // Group product IDs by business_owned
       const groupedProducts = {};
@@ -93,7 +91,7 @@ router.post("/create", verifyBusinessToken, async (req, res) => {
       for (const biz in groupedProducts) {
         const order = await Order.create({
           // order_id remains blank (or you could assign a generated value if needed)
-          order_id: orderID, 
+          order_id: order_id, 
           business_owned: biz,
           customer,
           product_list: groupedProducts[biz],
