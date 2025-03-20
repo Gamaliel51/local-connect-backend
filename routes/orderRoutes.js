@@ -33,13 +33,15 @@ router.post("/flutterwave-webhook", async (req, res) => {
       // For example, get the customer's email from the payload.
       // Adjust this according to how Flutterwave sends the customer info.
       const customerEmail = payload.customer.email;
-      const orderID = payload.customer.fullName.split(' ')[0]
+      const orderID = payload.txRef
+
+      console.log("SUCCCEESSS!!!: ", customerEmail, orderID)
 
       // Update orders for this customer from 'unpaid' to 'paid'
       if (customerEmail) {
         await Order.update(
           { status: ["paid"] },
-          { where: { customer: customerEmail, status: ["unpaid"] } }
+          { where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } }
         );
 
         // Optionally, update the user's account (e.g. add credits)
