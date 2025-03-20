@@ -25,10 +25,15 @@ const updateOrder = async (payload) => {
     // Update orders for this customer from 'unpaid' to 'paid'
     if (customerEmail) {
       
-      await Order.update(
-        { status: ["paid"] },
-        { where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } }
-      );
+      const orders = await Order.findAll({ where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } });
+
+      console.log("ORDERS: ", orders)
+
+      for(const order of orders){
+        order.status = ['paid']
+
+        await order.save()
+      }
 
       // Optionally, update the user's account (e.g. add credits)
       // const user = await User.findOne({ where: { email: customerEmail } });
