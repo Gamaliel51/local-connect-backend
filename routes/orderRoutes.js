@@ -39,6 +39,13 @@ router.post("/flutterwave-webhook", async (req, res) => {
 
       // Update orders for this customer from 'unpaid' to 'paid'
       if (customerEmail) {
+
+        const checkOrder = await Order.findOne({ where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] }})
+
+        if(!checkOrder){
+          return res.status(400).json({message: 'fail'})
+        }
+        
         await Order.update(
           { status: ["paid"] },
           { where: { customer: customerEmail, order_id: orderID, status: ["unpaid"] } }
