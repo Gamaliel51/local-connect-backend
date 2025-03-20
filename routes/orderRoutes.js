@@ -55,9 +55,7 @@ router.post("/flutterwave-webhook", async (req, res) => {
     const payload = req.body;
     console.log("Flutterwave payload:", payload);
 
-    res.status(200).end();
-
-    setTimeout(() => updateOrder(payload), 30000)
+    setTimeout(() => {updateOrder(payload); res.status(200).end();}, 30000)
     
   } catch (error) {
     console.error("Flutterwave webhook error:", error);
