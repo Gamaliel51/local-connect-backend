@@ -20,13 +20,11 @@ router.get("/:email", async (req, res) => {
 router.post("/add", async (req, res) => {
   try {
     const { user, product } = req.body; // product is an object containing at least product_id, name, price, imageUrl, etc.
-    let cart = await Cart.findOne({ where: { email: user } });
+    let cart = await Cart.findOne({ where: { user } });
     if (!cart) {
       cart = await Cart.create({ user, products: [product] });
     } else {
-      const updatedProducts = cart.products || [];
-      updatedProducts.push(product);
-      cart.products = updatedProducts;
+      cart.products = [...cart.products, product];
       await cart.save();
     }
     res.json({ cart });
