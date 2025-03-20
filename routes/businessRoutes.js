@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const Flutterwave = require("flutterwave-node-v3");
+
 const cloudinary = require("../config/cloudinary");
 const Business = require('../models/Business')
 const Product = require("../models/Product");
@@ -12,6 +14,8 @@ const router = express.Router();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+const flw = new Flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
 
 // Utility function to calculate distance using the Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -229,7 +233,76 @@ router.post("/fetch-by-category", async (req, res) => {
       res.status(500).json({ error: error.message });
     }
 });
-  
+
+// Fetch Wallet for a Business
+router.get("/wallet/:business_email", async (req, res) => {
+  try {
+    const { business_email } = req.params;
+    const wallet = await Wallet.findOne({ where: { business_email } });
+    if (!wallet) {
+      return res.status(404).json({ error: "No transaction made. your wallet will created after your first client" });
+    }
+    res.json({ wallet });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Withdraw funds from Wallet using Flutterwave
+router.post("/wallet/withdraw", async (req, res) => {
+  try {
+    // Expected payload: business_email, amount, account_number, bank_code
+    const { business_email, amount, account_number, bank_code } = req.body;
+    if (!business_email || !amount || !account_number || !bank_code) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Find the wallet
+    const wallet = await Wallet.findOne({ where: { business_email } });
+    if (!wallet) {
+      return res.status(404).json({ error: "Wallet not found" });
+    }
+
+    // Check if there are sufficient funds
+    if (wallet.amount < amount) {
+      return res.status(400).json({ error: "Insufficient funds" });
+    }
+
+    // Prepare withdrawal payload for Flutterwave Transfer
+    const payload = {
+      account_bank: bank_code, // e.g., "058" for GTBank
+      account_number,
+      amount,
+      narration: "Withdrawal from wallet",
+      currency: "NGN",
+      reference: `withdrawal-${Date.now()}`,
+      callback_url: process.env.FLW_WITHDRAWAL_CALLBACK_URL || "https://yourdomain.com/callback",
+    };
+
+    // Initiate the withdrawal via Flutterwave
+    const response = await flw.Transfer.initiate(payload);
+
+    // On success, update the wallet: subtract funds and log the transaction
+    wallet.amount -= amount;
+    const transaction = {
+      from: wallet.business_email,
+      to: "External Account",
+      amount,
+      reference: payload.reference,
+      date: new Date(),
+    };
+    // Ensure transactions is an array before pushing
+    wallet.transactions = wallet.transactions || [];
+    wallet.transactions.push(transaction);
+    await wallet.save();
+
+    res.status(200).json({ message: "Withdrawal initiated", response });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
   
   
 
