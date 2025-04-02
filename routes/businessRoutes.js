@@ -37,7 +37,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Business Signup
 router.post("/signup", upload.single("profileImage"), async (req, res) => {
     try {
-        const { email, name, password, about, address, location, category, tags } = req.body;
+        const { email, name, password, about, phone, address, location, category, tags } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
 
         let profileImageUrl;
@@ -60,6 +60,7 @@ router.post("/signup", upload.single("profileImage"), async (req, res) => {
             name,
             password: hashedPassword,
             about,
+            phone,
             address,
             location: JSON.parse(location),
             category,
@@ -95,7 +96,7 @@ router.post("/login", async (req, res) => {
 // Update Business Profile
 router.put("/update-profile", verifyBusinessToken, upload.single("profileImage"), async (req, res) => {
   try {
-      const { name, about, address, category, tags, location } = req.body;
+      const { name, about, address, phone, category, tags, location } = req.body;
       let profileImageUrl;
       
       const business = await Business.findOne({ where: { email: req.business.businessId } });
@@ -121,7 +122,7 @@ router.put("/update-profile", verifyBusinessToken, upload.single("profileImage")
       }
 
       await Business.update(
-          { name, about, address, category, tags: JSON.parse(tags), profileImageUrl, location: JSON.parse(location) },
+          { name, about, address, phone, category, tags: JSON.parse(tags), profileImageUrl, location: JSON.parse(location) },
           { where: { email: req.business.businessId } }
       );
 
@@ -136,7 +137,7 @@ router.get("/:email", async (req, res) => {
   try {
       const business = await Business.findOne(
         { where: { email: req.params.email },
-          attributes: ['email', 'name', 'about', 'address', 'location', 'category', 'profileImageUrl', 'active', 'tags']
+          attributes: ['email', 'name', 'about', 'address', 'phone', 'location', 'category', 'profileImageUrl', 'active', 'tags']
       });
       if (!business) return res.status(404).json({ error: "Business not found" });
 
