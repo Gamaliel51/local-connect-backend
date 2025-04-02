@@ -24,7 +24,7 @@ const settings = {
     sample_user: {
         email: "john.doe@example.com",
         name: "John Doe",
-        password: "securepassword",
+        password: "123",
         address: "789 Elm Street, CA",
         profileImageUrl: "https://example.com/images/profile.jpg"
     },
