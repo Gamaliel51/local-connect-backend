@@ -153,6 +153,8 @@ router.put("/update/:id", verifyBusinessToken, upload.single("image"), async (re
   
       // Update product in the database
       await product.update(updatedData);
+
+      await product.save()
       res.status(200).json({ message: "Product updated successfully", product });
     } catch (error) {
       res.status(500).json({ error: error.message });
