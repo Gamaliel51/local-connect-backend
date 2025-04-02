@@ -112,6 +112,76 @@ router.post("/products-search", async (req, res) => {
     }
 });
 
+// Update Product Route
+router.put("/update/:id", verifyBusinessToken, upload.single("image"), async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Ensure the product belongs to the business making the request
+      const product = await Product.findOne({ 
+        where: { 
+          product_id: id, 
+          business_owned: req.business.businessId 
+        } 
+      });
+      if (!product) {
+        return res.status(404).json({ error: "Product not found or unauthorized." });
+      }
+  
+      // Prepare update data from form fields
+      const updatedData = {
+        name: req.body.name,
+        about: req.body.about,
+        price: req.body.price,
+        available: req.body.available ? JSON.parse(req.body.available) : product.available,
+        tags: req.body.tags ? JSON.parse(req.body.tags) : product.tags,
+      };
+  
+      // If an image file is provided, upload to Cloudinary
+      if (req.file) {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "product_images" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(req.file.buffer);
+        });
+        updatedData.imageUrl = result.secure_url;
+      }
+  
+      // Update product in the database
+      await product.update(updatedData);
+      res.status(200).json({ message: "Product updated successfully", product });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+});
+  
+// Delete Product Route
+router.delete("/delete/:id", verifyBusinessToken, async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Verify that the product belongs to the business making the request
+      const product = await Product.findOne({ 
+        where: { 
+          product_id: id, 
+          business_owned: req.business.businessId 
+        } 
+      });
+      if (!product) {
+        return res.status(404).json({ error: "Product not found or unauthorized." });
+      }
+  
+      // Delete the product
+      await product.destroy();
+      res.status(200).json({ message: "Product deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+});
+
 // Fetch Product by ID
 router.get("/:id", async (req, res) => {
     try {

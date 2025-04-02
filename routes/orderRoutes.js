@@ -96,7 +96,7 @@ router.post("/flutterwave-webhook", async (req, res) => {
   
   
 // Create Order
-router.post("/create", verifyBusinessToken, async (req, res) => {
+router.post("/create", verifyUserToken, async (req, res) => {
     try {
       const { order_id, customer, productOrders, collection_method, customer_notes } = req.body;
       if (!customer || !productOrders || !Array.isArray(productOrders)) {
@@ -144,6 +144,43 @@ router.get("/user/:email", async (req, res) => {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+});
+
+// Order Update Route for Businesses to Update Order Details
+router.put("/update-details/:orderId", verifyBusinessToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    // Find the order that belongs to the business making the request
+    const order = await Order.findOne({
+      where: { order_id: orderId, business_owned: req.business.businessId },
+    });
+    
+    if (!order) {
+      return res.status(404).json({ error: "Order not found or unauthorized." });
+    }
+    
+    // Update allowed fields if provided in the request body
+    const { product_list, collection_method, customer_notes, status } = req.body;
+    
+    if (product_list !== undefined) {
+      order.product_list = product_list;
+    }
+    if (collection_method !== undefined) {
+      order.collection_method = collection_method;
+    }
+    if (customer_notes !== undefined) {
+      order.customer_notes = customer_notes;
+    }
+    if (status !== undefined) {
+      order.status = status;
+    }
+    
+    await order.save();
+    
+    res.status(200).json({ message: "Order updated successfully", order });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Update Order Status
