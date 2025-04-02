@@ -20,6 +20,11 @@ const Business = sequelize.define('Business', {
     address: {
         type: DataTypes.STRING
     },
+    phone: {
+        type: DataTypes.STRING,
+        defaultValue: "+234 800 000 0000",
+        allowNull: true
+    },
     location: {
         type: DataTypes.ARRAY(DataTypes.FLOAT)
     },
