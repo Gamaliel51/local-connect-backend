@@ -113,7 +113,7 @@ router.post("/products-search", async (req, res) => {
 });
 
 // Update Product Route
-router.put("/update/:id", verifyBusinessToken, upload.single("image"), async (req, res) => {
+router.post("/update/:id", verifyBusinessToken, upload.single("image"), async (req, res) => {
     try {
       const { id } = req.params;
       // Ensure the product belongs to the business making the request
