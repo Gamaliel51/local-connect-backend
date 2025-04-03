@@ -176,7 +176,7 @@ router.post("/fetch-nearby", async (req, res) => {
       
       // Return the top 20 closest businesses
       const nearbyBusinesses = businessesWithDistance
-        .slice(0, 20)
+        .slice(0, 5)
         .map((item) => item.business);
       
       res.json({ businesses: nearbyBusinesses });
