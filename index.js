@@ -37,7 +37,7 @@ app.use('/cart', cartRoutes)
 
 sequelize.sync().then(() => {
     app.listen(settings.port, () => {
-        createSampleRecords()
+        // createSampleRecords()
         console.log(`Server running on port ${settings.port}`)
     });
 })
